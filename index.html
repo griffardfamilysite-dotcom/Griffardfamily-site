@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Griffard Family Hub</title>
+  <style>
+    :root{
+      --forest:#0f3d2e; --cream:#faf7ef; --ink:#102019; --muted:#6b7d75; --accent:#b88a1a;
+      --card:#fff; --line:#ececec;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;line-height:1.45}
+    a{color:var(--forest);text-decoration:none} a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:auto;padding:24px}
+
+    /* TOP BAR */
+    .topbar{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eaeaea}
+    .topbar-inner{display:flex;align-items:center;gap:16px}
+    .site-title{margin:0;font-weight:800;letter-spacing:.2px;color:var(--forest)}
+    .nav{margin-left:auto;display:flex;gap:16px;flex-wrap:wrap}
+    .nav a{padding:.5rem .75rem;border-radius:10px}
+    .nav a:hover{background:#eef4f0}
+
+    /* Mobile menu */
+    .menu-toggle{
+      display:none;margin-left:auto;background:#fff;border:2px solid var(--forest);
+      border-radius:10px;padding:.4rem .6rem;font-size:20px;color:var(--forest);cursor:pointer
+    }
+    @media (max-width:760px){
+      .menu-toggle{display:inline-flex}
+      .topbar-inner{flex-wrap:wrap}
+      .nav{display:none;flex-direction:column;width:100%;margin-top:10px;gap:8px}
+      .nav.open{display:flex}
+      .nav a{padding:.7rem 1rem}
+    }
+
+    /* HERO with logo */
+    .hero{background:#fff;box-shadow:0 2px 20px rgba(16,32,25,.06);margin:18px;border-radius:16px}
+    .hero-inner{display:flex;gap:18px;align-items:center}
+    .logo-hero{height:180px;width:auto}
+    .title-wrap h1{margin:.1rem 0 0;color:#41534a;font-weight:900;font-size:clamp(28px,4vw,42px)}
+    .title-wrap p{margin:.35rem 0 0;color:#485a52}
+
+    /* Sections / cards */
+    section{margin-top:28px}
+    section h2{margin:0 0 12px;color:var(--forest)}
+
+    .btn{padding:.8rem 1.05rem;border:2px solid var(--forest);border-radius:999px;background:#fff;color:var(--forest);font-weight:700;display:inline-flex;gap:.5rem;align-items:center;cursor:pointer}
+    .btn.filled{background:var(--forest);color:#fff}
+    .btn.accent{border-color:var(--accent);color:#fff;background:var(--accent)}
+    .btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 18px rgba(16,32,25,.05)}
+    details.card{margin:12px 0}
+    details.card > summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;font-weight:800;color:#27463a}
+    details.card[open] > summary{border-bottom:1px solid #f0f0f0}
+    .card-body{padding:18px}
+
+    /* Events */
+    .event{
+      background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+      display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;margin:12px 0
+    }
+    .event h3{margin:.2rem 0 0}
+    .event .where{color:#6b7d75;margin:.3rem 0 0}
+    .event .when{background:#f2f8f5;border:2px solid #d8e9e1;border-radius:16px;padding:10px 14px;font-weight:800;color:#1e3a30;white-space:nowrap;text-align:right}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .event-media{width:110px;min-width:110px}
+    .event-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid #eee;cursor:zoom-in}
+
+    /* Gallery */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .thumb{aspect-ratio:4/3;object-fit:cover;width:100%;border-radius:12px;border:1px solid #eee;background:#f8f8f8;cursor:zoom-in}
+
+    /* Directory (Photo, Last, First, Email, Phone, Address, Kids) */
+    .rows{display:grid;gap:10px}
+    .row{
+      display:grid;
+      grid-template-columns:86px 1.2fr 1.2fr 1.6fr 1fr 2fr 1fr;
+      gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff
+    }
+    .row.head{font-weight:800;background:#f7faf8}
+    .avatar{
+      width:72px;height:72px;border-radius:50%;object-fit:cover;border:1px solid #e9e9e9;background:#f4f4f4;cursor:zoom-in
+    }
+    .muted{color:var(--muted)}
+    .input{padding:.7rem 1rem;border-radius:12px;border:1px solid #dcdcdc;min-width:260px}
+
+    /* Lightbox */
+    #lightbox{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9);z-index:1000}
+    #lightbox.open{display:flex}
+    #lightbox img{max-width:92vw;max-height:92vh;border-radius:10px}
+    #lightbox-close{position:absolute;top:16px;right:22px;color:#fff;font-size:40px;font-weight:900;cursor:pointer}
+
+    /* Anchor offset */
+    section[id]{scroll-margin-top:92px}
+
+    /* Private masking */
+    .private-mask{color:#9a7d00;background:#fff9db;border:1px dashed #e8d18a;border-radius:8px;padding:6px 8px;white-space:pre-line}
+  </style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="topbar" id="top">
+    <div class="container topbar-inner">
+      <h1 class="site-title">Griffard Family Hub</h1>
+      <button id="menuToggle" class="menu-toggle" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">☰</button>
+      <nav id="site-nav" class="nav" aria-label="Primary">
+        <a href="#events">Events</a>
+        <a href="#gallery">Photos</a>
+        <a href="#directory">Directory</a>
+        <a href="#contribute">Contribute</a>
+        <a href="#feedback">Feedback</a>
+        <a href="#board">Bulletin Board</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="container hero-inner">
+      <img src="logo.png" class="logo-hero" alt="Griffard family crest" />
+      <div class="title-wrap">
+        <h1>Welcome to the Griffard Family Hub</h1>
+        <p>Updates, reunions, photos, and staying in touch.</p>
+        <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+          <a class="btn filled" href="#events">See upcoming events</a>
+          <a class="btn" href="#gallery">View photos</a>
+          <a class="btn accent" href="#contribute">Contribute</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" id="main">
+
+    <!-- ANNOUNCEMENTS -->
+    <section aria-labelledby="ann-title">
+      <h2 id="ann-title">Announcements, Memorials, and Births</h2>
+      <div id="ann-latest" class="card-body card" style="display:grid;gap:12px;"></div>
+      <details class="card" style="margin-top:12px">
+        <summary>Archive</summary>
+        <div id="ann-archive" class="card-body" style="display:grid;gap:12px;"></div>
+      </details>
+    </section>
+
+    <!-- EVENTS -->
+    <section id="events" aria-labelledby="ev-title">
+      <h2 id="ev-title">Upcoming Events</h2>
+      <div id="eventsWrap"></div>
+    </section>
+
+    <!-- ===== GALLERY ===== -->
+    <section id="gallery" aria-labelledby="gal-title">
+      <h2 id="gal-title">Photo Gallery</h2>
+
+      <p class="muted" style="margin-top:-4px;margin-bottom:12px">
+        <strong>Open an album</strong> to view photos. You can also upload photos (password required).
+      </p>
+
+      <!-- Album cards (from albums.json) -->
+      <div id="albumCards" class="grid" style="margin-bottom:16px"></div>
+
+      <!-- Upload once (password-gated unsigned Cloudinary widget) -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <button id="uploadBtn" class="btn">Upload photos (password required)</button>
+      </div>
+
+      <!-- Selected album title -->
+      <h3 id="albumHeading" style="display:none;margin:10px 0 8px"></h3>
+
+      <!-- Photos for selected album -->
+      <div id="galleryGrid" class="grid" role="list"></div>
+
+      <!-- Load more goes at the bottom of photos -->
+      <div style="display:flex;justify-content:center;margin-top:14px">
+        <button id="loadMoreBtn" class="btn" style="display:none">Load more</button>
+      </div>
+    </section>
+
+    <!-- DIRECTORY (unchanged) -->
+    <section id="directory" aria-labelledby="dir-title">
+      <h2 id="dir-title">Family Directory</h2>
+      <details class="card">
+        <summary>Contact Information. Click here</summary>
+        <div class="card-body">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input id="dirSearch" class="input" type="search" placeholder="Search names, email, address…" />
+            <a class="btn" id="dirUpdateBtn" target="_blank" rel="noopener">Update my info</a>
+            <button id="unlockBtn" class="btn">Unlock private details</button>
+          </div>
+          <div id="dirNote" class="muted" style="margin-top:10px">
+            Need to add or change? Click “Update my info” and complete the form.
+            <br>Some entries choose to keep Phone / Address / Kids private. Use the unlock button (family password) to reveal.
+          </div>
+
+          <div class="rows" id="dirRows">
+            <div class="row head">
+              <div>Photo</div>
+              <div>Last Name</div>
+              <div>First Name</div>
+              <div>Email</div>
+              <div>Phone</div>
+              <div>Address</div>
+              <div>Kids</div>
+            </div>
+          </div>
+          <div id="dirCount" class="muted" style="margin-top:8px"></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- CONTRIBUTE -->
+    <section id="contribute" aria-labelledby="contrib-title">
+      <h2 id="contrib-title">Contribute</h2>
+      <details class="card">
+        <summary>Want to contribute? Click here</summary>
+        <div class="card-body">
+          <p><strong>Contributions to upcoming events and activities are greatly appreciated! Payments to Natalie Clase will receive an emailed receipt and be deposited into the Griffard Family Reunion Fund.</strong></p>
+          <ul>
+            <li><strong>Venmo:</strong> @NatalieBClase</li>
+            <li><strong>Zelle:</strong> 317-417-5061 (Natalie Clase)</li>
+            <li><strong>Make Checks Payable to:</strong> Natalie Clase, 16145 Brookhollow Dr., Westfield IN 46062</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- FEEDBACK -->
+    <section id="feedback" aria-labelledby="fb-title">
+      <h2 id="fb-title">Feedback</h2>
+      <details class="card">
+        <summary>Submit feedback or site improvements.  Submit a request for a memorial or birth announcement. Click here</summary>
+        <div class="card-body">
+          <form id="feedbackForm">
+            <div style="display:grid;gap:10px;max-width:680px">
+              <input class="input" name="name" type="text" placeholder="Your name" required />
+              <input class="input" name="email" type="email" placeholder="Your email (optional)" />
+              <textarea class="input" name="message" rows="5" placeholder="Your message…" required></textarea>
+              <button class="btn filled" type="submit">Submit and Send</button>
+            </div>
+          </form>
+          <div class="muted" style="margin-top:8px">This opens your email app with the details pre‑filled to <strong>griffardfamily.site@gmail.com</strong>.</div>
+        </div>
+      </details>
+    </section>
+
+    <!-- BULLETIN BOARD -->
+    <section id="board" aria-labelledby="bb-title">
+      <h2 id="bb-title">Family Bulletin Board</h2>
+      <details class="card">
+        <summary>Post or respond to messages! Click here</summary>
+        <div class="card-body">
+          <p><strong>Coming Soon!</strong></p>
+        </div>
+      </details>
+    </section>
+
+  </main>
+
+  <!-- Lightbox -->
+  <div id="lightbox" aria-hidden="true">
+    <span id="lightbox-close" aria-label="Close">&times;</span>
+    <img id="lightbox-img" src="" alt="Expanded media" />
+  </div>
+
+  <!-- Cloudinary Upload Widget (safe: no secret here) -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js" defer></script>
+
+  <script>
+  /* ====== CONFIG ====== */
+  const DIR_FORM_URL  = 'https://forms.gle/wXvzjC3PpoCtkp4T6';
+  const DIR_SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOzXX_zLHWai93Q6Vc7Y0GyAnqOAvWlWkt1-vahMtrbVxIYKx60U_oJOMHEYrFN56wD5liUqi7TlVN/pub?output=csv';
+  const ANNOUNCE_CSV  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS7mw-57wl0YaYTWQn-KadCYY0l6_2e3sLpRxBycwJdyS-rHVr-euBt8DHSpSxh_RpN6ET66CfBMrL-/pub?output=csv';
+  const EVENTS_CSV    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZtKBkntUfQXQG4wk41J4I8ySYnqL_sIn-n-s1ufTE3p8p3DqM22vIeMpXvZrCeapMRQLHXgptQ219/pub?output=csv';
+
+  /* Gallery config */
+  const ALBUMS_JSON   = 'albums.json';                   // your file
+  const LIST_FN       = '/.netlify/functions/list-photos';// returns {resources,next_cursor}
+  const CLOUD_NAME    = 'dry0htblg';
+  const UPLOAD_PRESET = 'FAMILY_GALLERY';
+  const GALLERY_PASSWORD = 'Family123$';
+  const PAGE_SIZE     = 30;
+
+  /* Directory privacy password */
+  const DIRECTORY_PRIVATE_PASSWORD = 'Family123$';
+
+  const $ = sel => document.querySelector(sel);
+  const el = (tag, cls, txt) => { const n = document.createElement(tag); if(cls) n.className = cls; if(txt!=null) n.textContent = txt; return n; };
+  const isLikelyImageUrl = (u)=>/\.(png|jpe?g|gif|webp|bmp|svg)(\?|#|$)/i.test((u||'').split('?')[0]);
+  const isPdf = (u)=>/\.pdf(\?|#|$)/i.test((u||'').split('?')[0]);
+
+  /* Lightbox */
+  const openLightbox = (src)=>{ if(!src) return; const lb=$('#lightbox'); const img=$('#lightbox-img'); img.src=src; lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; };
+  const closeLightbox = ()=>{ const lb=$('#lightbox'); const img=$('#lightbox-img'); lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.src=''; };
+  document.addEventListener('click', (e)=>{ const img = e.target.closest('.lb-img'); if(img){ e.preventDefault(); openLightbox(img.getAttribute('data-fullsrc') || img.src); }});
+  $('#lightbox').addEventListener('click', (e)=>{ if(e.target.id==='lightbox' || e.target.id==='lightbox-close') closeLightbox(); });
+  window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+
+  /* Mobile nav */
+  (function setupMenu(){
+    const btn = document.getElementById('menuToggle');
+    const nav = document.getElementById('site-nav');
+    btn?.addEventListener('click', ()=>{
+      const open = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();
+
+  /* CSV + dates */
+  function parseCSV(text){
+    const out=[], row=[]; let cell='', q=false;
+    for(let i=0;i<text.length;i++){
+      const ch=text[i], nx=text[i+1];
+      if(ch==='\"' && nx==='\"'){ cell+='\"'; i++; continue; }
+      if(ch==='\"'){ q=!q; continue; }
+      if(ch===',' && !q){ row.push(cell); cell=''; continue; }
+      if((ch==='\n'||ch==='\r') && !q){ if(cell.length||row.length){ row.push(cell); out.push(row.slice()); row.length=0; cell=''; } continue; }
+      cell+=ch;
+    }
+    if(cell.length||row.length){ row.push(cell); out.push(row.slice()); }
+    return out;
+  }
+  const toDate = (s)=>{
+    if(!s) return null;
+    let m = /^\s*(\d{4})-(\d{2})-(\d{2})\s*$/.exec(s);
+    if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+    m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(s);
+    if(m) return new Date(+m[3], +m[1]-1, +m[2]);
+    return null;
+  };
+  function fmtDate(s){ const d=toDate(s); return d ? d.toLocaleDateString() : ''; }
+  function today(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+
+  /* ===================== ANNOUNCEMENTS (unchanged) ===================== */
+  function driveFromUrl(u){
+    if(!u) return null;
+    const idMatch = u.match(/\/file\/d\/([^/]+)/) || u.match(/[?&]id=([^&]+)/);
+    if(!idMatch) return null;
+    const id = idMatch[1];
+    return {
+      id,
+      thumb: `https://drive.google.com/thumbnail?id=${id}&sz=w1200`,
+      direct: `https://drive.google.com/uc?export=view&id=${id}`,
+      preview: `https://drive.google.com/file/d/${id}/preview`
+    };
+  }
+  function mediaFromUrl(u){
+    if(!u) return null;
+    const d = driveFromUrl(u);
+    if(d) return { kind: 'drive', ...d };
+    if(isLikelyImageUrl(u)) return { kind:'image', src:u };
+    if(isPdf(u)) return { kind:'pdf', src:u };
+    return { kind:'link', href:u };
+  }
+  function annCard(a){
+    const wrap = document.createElement('div');
+    wrap.className = 'card-body card';
+    wrap.style.padding = '14px 16px';
+
+    let mediaHtml = '';
+    if(a.media){
+      if(a.media.kind==='drive'){
+        mediaHtml = `<img src="${a.media.thumb}" class="lb-img" data-fullsrc="${a.media.direct}" alt="" style="max-width:220px;border-radius:10px;margin-right:14px;border:1px solid #eee;cursor:zoom-in">`;
+      }else if(a.media.kind==='image'){
+        mediaHtml = `<img src="${a.media.src}" class="lb-img" data-fullsrc="${a.media.src}" alt="" style="max-width:220px;border-radius:10px;margin-right:14px;border:1px solid #eee;cursor:zoom-in">`;
+      }else{
+        mediaHtml = `<a class="btn" href="${a.media.href || a.media.src}" target="_blank" rel="noopener">Open Attachment</a>`;
+      }
+    }
+
+    wrap.innerHTML = `
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        ${mediaHtml}
+        <div style="flex:1">
+          <strong>${a.title || '(No title)'}</strong>
+          <div class="muted" style="margin:.15rem 0">${fmtDate(a.date)}</div>
+          <div>${a.text || ''}</div>
+        </div>
+      </div>
+    `;
+    return wrap;
+  }
+  async function loadAnnouncements(){
+    try{
+      const r = await fetch(ANNOUNCE_CSV, {cache:'no-store'}); if(!r.ok) throw 0;
+      const rows = parseCSV(await r.text()); const hdr = rows.shift().map(h=>h.trim().toLowerCase());
+      const get = name => hdr.indexOf(name);
+      const iTitle = get('title'), iText=get('details')>=0?get('details'):get('text'), iDate=get('date'), iPin=get('pin'), iExp=get('expires on'), iPhoto=get('photo upload');
+      const data = rows.map(r=>({
+        title:r[iTitle], text:r[iText], date:r[iDate],
+        pin:(r[iPin]||'').toString().trim().toLowerCase().startsWith('y') || ['1','true','yes','y'].includes((r[iPin]||'').toString().trim().toLowerCase()),
+        expires: toDate(r[iExp]),
+        media: mediaFromUrl(r[iPhoto])
+      }))
+      .filter(a => !a.expires || a.expires >= today())
+      .sort((a,b)=>{
+        if(a.pin && !b.pin) return -1;
+        if(!a.pin && b.pin) return 1;
+        const da = toDate(a.date) || 0, db = toDate(b.date) || 0; return db-da;
+      });
+
+      const latest = document.getElementById('ann-latest');
+      const archive = document.getElementById('ann-archive');
+      latest.innerHTML = ''; archive.innerHTML = '';
+
+      data.slice(0,3).forEach(a => latest.appendChild(annCard(a)));
+      data.slice(3).forEach(a => archive.appendChild(annCard(a)));
+    }catch(e){
+      document.getElementById('ann-latest').innerHTML = '<p class="muted">No announcements yet.</p>';
+    }
+  }
+
+  /* ===================== EVENTS (unchanged) ===================== */
+  function eventCard(ev){
+    const mediaHtml = ev.media ? (() => {
+      if(ev.media.kind==='drive'){
+        return `<img class="event-thumb lb-img" src="${ev.media.thumb}" data-fullsrc="${ev.media.direct}" alt="">`;
+      } else if(ev.media.kind==='image'){
+        return `<img class="event-thumb lb-img" src="${ev.media.src}" data-fullsrc="${ev.media.src}" alt="">`;
+      } else {
+        return `<a class="btn" href="${ev.media.href || ev.media.src}" target="_blank" rel="noopener">Open attachment</a>`;
+      }
+    })() : '';
+
+    return `
+      <div class="event">
+        <div class="event-media">${mediaHtml}</div>
+        <div>
+          <h3>${ev.title || '(Untitled event)'}</h3>
+          <div class="where">${ev.location || ''}</div>
+          <div class="actions">
+            ${ev.url ? `<a class="btn" href="${ev.url}" target="_blank" rel="noopener">Details</a>` : ''}
+          </div>
+        </div>
+        <div class="when">${fmtDate(ev.date)}</div>
+      </div>
+    `;
+  }
+  async function loadEvents(){
+    try{
+      const r = await fetch(EVENTS_CSV, {cache:'no-store'}); if(!r.ok) throw 0;
+      const rows = parseCSV(await r.text()); const hdr = rows.shift().map(h=>h.trim().toLowerCase());
+      const gi = n => hdr.indexOf(n);
+      const I = {
+        title: gi('title'),
+        date: gi('date'),
+        location: gi('location'),
+        url: gi('details url'),
+        doc: gi('document or picture')
+      };
+      const data = rows.map(r=>({
+        title:r[I.title], date:r[I.date], location:r[I.location], url:r[I.url], media: mediaFromUrl(r[I.doc])
+      }))
+      .filter(ev => !ev.date || toDate(ev.date) >= today())
+      .sort((a,b)=>(toDate(a.date)||0)-(toDate(b.date)||0));
+      const wrap = document.getElementById('eventsWrap');
+      wrap.innerHTML = data.length ? data.map(eventCard).join('') : '<p class="muted">No upcoming events.</p>';
+    }catch(e){
+      document.getElementById('eventsWrap').innerHTML = '<p class="muted">No upcoming events.</p>';
+    }
+  }
+
+  /* ===================== GALLERY (albums + paging + upload) ===================== */
+  let currentAlbum = null;
+  let nextCursor   = null;
+
+  function placeholderCover(title='Album'){
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    div.style.display = 'grid';
+    div.style.placeItems = 'center';
+    div.style.fontWeight = '700';
+    div.style.color = '#41534a';
+    div.textContent = title;
+    return div;
+  }
+
+  async function renderAlbumCards(){
+    const wrap = document.getElementById('albumCards');
+    wrap.innerHTML = '<div class="muted">Loading albums…</div>';
+
+    try{
+      const r = await fetch(ALBUMS_JSON, {cache:'no-store'});
+      if(!r.ok) throw new Error('albums.json missing');
+      const albums = await r.json();
+
+      wrap.innerHTML = '';
+      albums.forEach(a=>{
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.style.cursor = 'pointer';
+        card.style.overflow = 'hidden';
+
+        const media = document.createElement('div');
+        media.style.padding = '8px';
+
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.alt = a.title || 'Album cover';
+        img.src = a.cover || '';
+        img.onerror = () => { media.innerHTML=''; media.appendChild(placeholderCover(a.title)); };
+        media.appendChild(img);
+
+        const cap = document.createElement('div');
+        cap.style.padding = '12px 14px';
+        cap.style.fontWeight = '800';
+        cap.textContent = a.title || 'Album';
+
+        card.appendChild(media);
+        card.appendChild(cap);
+
+        card.addEventListener('click', ()=> openAlbum(a.slug, a.title));
+        wrap.appendChild(card);
+      });
+
+      // Auto-open the first album for convenience
+      if(albums[0]) openAlbum(albums[0].slug, albums[0].title);
+
+    }catch(err){
+      console.warn(err);
+      wrap.innerHTML = '<div class="muted">Could not load albums.</div>';
+    }
+  }
+
+  async function openAlbum(slug, title){
+    currentAlbum = slug;
+    nextCursor   = null;
+
+    document.getElementById('galleryGrid').innerHTML = '';
+    const head = document.getElementById('albumHeading');
+    head.style.display = '';
+    head.textContent   = title || 'Album';
+
+    await loadAlbumPage(); // first page
+  }
+
+  async function loadAlbumPage(){
+    if(!currentAlbum) return;
+
+    const grid   = document.getElementById('galleryGrid');
+    const loadBt = document.getElementById('loadMoreBtn');
+    loadBt.style.display = 'none';
+
+    const qs = new URLSearchParams({ album: currentAlbum, max_results: PAGE_SIZE });
+    if(nextCursor) qs.set('cursor', nextCursor);
+
+    try{
+      const res = await fetch(`${LIST_FN}?${qs.toString()}`, {cache:'no-store'});
+      if(!res.ok) throw new Error('list-photos failed');
+      const { resources = [], next_cursor = null } = await res.json();
+
+      resources.forEach(r=>{
+        const url = r.secure_url || r.url;
+        if(!url) return;
+        const img = document.createElement('img');
+        img.className = 'thumb lb-img';
+        img.alt = r.public_id || '';
+        img.src = url.replace('/upload/','/upload/q_auto,f_auto,w_900/');
+        img.setAttribute('data-fullsrc', url.replace('/upload/','/upload/q_auto,f_auto/'));
+        grid.appendChild(img);
+      });
+
+      nextCursor = next_cursor || null;
+      loadBt.style.display = nextCursor ? '' : 'none';
+
+    }catch(err){
+      console.warn(err);
+    }
+  }
+
+  function setupUploadButton(){
+    const btn = document.getElementById('uploadBtn');
+    if(!btn) return;
+    btn.addEventListener('click', async ()=>{
+      const pwd = prompt('Enter family password to upload:');
+      if(!pwd || pwd.trim() !== GALLERY_PASSWORD){ alert('Sorry, wrong password.'); return; }
+      if(!currentAlbum){ alert('Open an album first, then upload.'); return; }
+
+      const widget = cloudinary.createUploadWidget({
+        cloudName: CLOUD_NAME,
+        uploadPreset: UPLOAD_PRESET,
+        folder: `griffard/${currentAlbum}`,
+        multiple: true,
+        maxFiles: 5,
+        sources: ['local','camera','url','google_drive','dropbox'],
+        clientAllowedFormats: ['png','jpg','jpeg','webp','gif'],
+        showCompletedButton: true
+      }, (error, result)=>{
+        if(!error && result && result.event === 'success'){
+          // Prepend uploaded image immediately
+          const grid = document.getElementById('galleryGrid');
+          const url  = result.info.secure_url;
+          const img  = document.createElement('img');
+          img.className = 'thumb lb-img';
+          img.src = url.replace('/upload/','/upload/q_auto,f_auto,w_900/');
+          img.setAttribute('data-fullsrc', url.replace('/upload/','/upload/q_auto,f_auto/'));
+          grid.prepend(img);
+        }
+      });
+
+      widget.open();
+    });
+  }
+
+  /* ===================== DIRECTORY (kept as-is) ===================== */
+  function normalizeYes(v){
+    return ['y','yes','true','1'].includes(String(v||'').trim().toLowerCase());
+  }
+  function makeAddress(r, iStreet, iCity, iState, iZip){
+    const parts = [r[iStreet], r[iCity], r[iState], r[iZip]].map(x=>String(x||'').trim()).filter(Boolean);
+    if(!parts.length) return '';
+    const [street, city, state, zip] = [r[iStreet], r[iCity], r[iState], r[iZip]].map(x=>String(x||'').trim());
+    return [street, [city, state].filter(Boolean).join(', '), zip].filter(Boolean).join(' ');
+  }
+  function dirRowHTML(p){
+    const mask = `<span class="private-mask">Private — unlock to view</span>`;
+    const avatar = p.photo ? `<img class="avatar lb-img" src="${p.photo}" data-fullsrc="${p.photo}" alt="">` : `<div class="avatar" style="display:grid;place-items:center;color:#6b7d75;font-weight:700">—</div>`;
+    const phone   = (p._private ? mask : (p.phone||'')) || '';
+    const address = (p._private ? mask : (p.address||'')) || '';
+    const kids    = (p._private ? mask : (p.kids||'')) || '';
+    return `
+      <div class="row" data-key="${(p.last||'')+' '+(p.first||'')+' '+(p.email||'')+' '+(p.address||'')}">
+        <div>${avatar}</div>
+        <div>${p.last||''}</div>
+        <div>${p.first||''}</div>
+        <div>${p.email?`<a href="mailto:${p.email}">${p.email}</a>`:''}</div>
+        <div class="priv" data-field="phone">${phone}</div>
+        <div class="priv" data-field="address">${address}</div>
+        <div class="priv" data-field="kids">${kids}</div>
+      </div>
+    `;
+  }
+  function applyDirFilter(){
+    const q = ($('#dirSearch').value||'').trim().toLowerCase();
+    const rows = [...document.querySelectorAll('#dirRows .row:not(.head)')];
+    let shown = 0;
+    rows.forEach(r=>{
+      const hit = (r.getAttribute('data-key')||'').toLowerCase().includes(q);
+      r.style.display = hit ? '' : 'none';
+      if(hit) shown++;
+    });
+    $('#dirCount').textContent = `${shown} entr${shown===1?'y':'ies'}`;
+  }
+  async function loadDirectory(){
+    try{
+      const r = await fetch(DIR_SHEET_CSV, {cache:'no-store'}); if(!r.ok) throw 0;
+      const rows = parseCSV(await r.text()); const hdr = rows.shift().map(h=>h.trim().toLowerCase());
+      const gi = n => hdr.indexOf(n);
+
+      const I = {
+        last: gi('last name'),
+        first: gi('first name'),
+        email: gi('email'),
+        phone: gi('phone'),
+        street: gi('street address'),
+        city: gi('city'),
+        state: gi('state'),
+        zip: gi('zip'),
+        kids: gi('kids'),
+        photo: gi('profile photo'),
+        priv: gi('make private?')
+      };
+
+      const data = rows.map(r=>{
+        const addr = makeAddress(r, I.street,I.city,I.state,I.zip);
+        return {
+          last:r[I.last], first:r[I.first], email:r[I.email],
+          phone:r[I.phone], kids:r[I.kids], address:addr,
+          photo:r[I.photo], _private: normalizeYes(r[I.priv])
+        };
+      })
+      .sort((a,b)=> (a.last||'').localeCompare(b.last||'') || (a.first||'').localeCompare(b.first||''));
+
+      const wrap = document.getElementById('dirRows');
+      wrap.innerHTML = `
+        <div class="row head">
+          <div>Photo</div><div>Last Name</div><div>First Name</div><div>Email</div><div>Phone</div><div>Address</div><div>Kids</div>
+        </div>
+        ${data.map(dirRowHTML).join('')}
+      `;
+
+      applyDirFilter();
+      $('#dirSearch').addEventListener('input', applyDirFilter);
+
+      $('#unlockBtn').addEventListener('click', ()=>{
+        const pwd = prompt('Enter family password:');
+        if(pwd && pwd.trim()===DIRECTORY_PRIVATE_PASSWORD){
+          document.querySelectorAll('#dirRows .row .priv').forEach(cell=>{
+            const row = cell.closest('.row');
+            const p = data.find(x => ((x.last||'')+' '+(x.first||'')).trim() === (row ? row.querySelector(':scope > div:nth-child(2)')?.textContent + ' ' + row.querySelector(':scope > div:nth-child(3)')?.textContent : ''));
+          });
+          // Just swap masks to values by rebuilding from stored data
+          const rowsEls = [...document.querySelectorAll('#dirRows .row:not(.head)')];
+          rowsEls.forEach((row,idx)=>{
+            const phoneEl   = row.querySelector('[data-field="phone"]');
+            const addrEl    = row.querySelector('[data-field="address"]');
+            const kidsEl    = row.querySelector('[data-field="kids"]');
+            const d = data[idx];
+            if(d){
+              phoneEl.innerHTML = d.phone||'';
+              addrEl.innerHTML  = d.address||'';
+              kidsEl.innerHTML  = d.kids||'';
+            }
+          });
+        } else {
+          alert('Sorry, wrong password.');
+        }
+      });
+
+      $('#dirUpdateBtn').href = DIR_FORM_URL;
+
+    }catch(e){
+      const wrap = document.getElementById('dirRows');
+      wrap.innerHTML = '<p class="muted">Directory not available.</p>';
+    }
+  }
+
+  /* ===================== Feedback mailto ===================== */
+  document.getElementById('feedbackForm')?.addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = encodeURIComponent(fd.get('name')||'');
+    const email = encodeURIComponent(fd.get('email')||'');
+    const message = encodeURIComponent(fd.get('message')||'');
+    const subj = `Site feedback from ${decodeURIComponent(name)}`;
+    const body = `Name: ${decodeURIComponent(name)}%0AEmail: ${decodeURIComponent(email)}%0A%0A${decodeURIComponent(message)}`;
+    window.location.href = `mailto:griffardfamily.site@gmail.com?subject=${encodeURIComponent(subj)}&body=${body}`;
+  });
+
+  /* ===================== Init ===================== */
+  loadAnnouncements();
+  loadEvents();
+
+  // Gallery init
+  renderAlbumCards();
+  setupUploadButton();
+  document.getElementById('loadMoreBtn').addEventListener('click', loadAlbumPage);
+
+  // Directory init
+  loadDirectory();
+  </script>
+</body>
+</html>
