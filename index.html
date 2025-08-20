@@ -406,8 +406,8 @@
       const archive = document.getElementById('ann-archive');
       latest.innerHTML = ''; archive.innerHTML = '';
 
-      data.slice(0,3).forEach(a => latest.appendChild(annCard(a)));
-      data.slice(3).forEach(a => archive.appendChild(annCard(a)));
+      data.slice(0,5).forEach(a => latest.appendChild(annCard(a)));
+      data.slice(5).forEach(a => archive.appendChild(annCard(a)));
     }catch(e){
       document.getElementById('ann-latest').innerHTML = '<p class="muted">No announcements yet.</p>';
     }
