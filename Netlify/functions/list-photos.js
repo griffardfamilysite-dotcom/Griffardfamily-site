@@ -1,47 +1,59 @@
-// netlify/functions/list-photos.js
-import { v2 as cloudinary } from 'cloudinary';
+const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-export default async (event) => {
+exports.handler = async (event) => {
   try {
-    const root   = process.env.CLOUDINARY_FOLDER_ROOT || 'FAMILY_GALLERY';
-    const album  = (event.queryStringParameters?.album || '').trim();
-    if (!album) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'album is required' }) };
+    const params = new URLSearchParams(event.rawQuery || event.queryStringParameters || {});
+    const album = params.get('album') || '2025-reunion';
+    const maxResults = parseInt(params.get('max_results') || '30', 10);
+    const nextCursor = params.get('cursor') || undefined;
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      throw new Error('Missing Cloudinary environment variables.');
     }
 
-    const max    = Number(event.queryStringParameters?.max_results || 30);
-    const cursor = event.queryStringParameters?.cursor;
+    // List resources inside FAMILY_GALLERY/<album>
+    const res = await cloudinary.search
+      .expression(`folder=FAMILY_GALLERY/${album}`)
+      .with_field('context')
+      .max_results(maxResults)
+      .next_cursor(nextCursor)
+      .execute();
 
-    // e.g. FAMILY_GALLERY/2025-reunion
-    const folder = `${root}/${album}`;
-
-    let search = cloudinary.search
-      .expression(`resource_type:image AND folder="${folder}"`)
-      .sort_by('created_at','desc')
-      .max_results(max);
-
-    if (cursor) search = search.next_cursor(cursor);
-
-    const result = await search.execute();
+    const payload = {
+      resources: (res.resources || []).map(r => ({
+        secure_url: r.secure_url,
+        public_id: r.public_id,
+        folder: r.folder,
+        width: r.width,
+        height: r.height,
+        format: r.format
+      })),
+      next_cursor: res.next_cursor || null
+    };
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        resources:   result.resources?.map(r => ({
-          secure_url: r.secure_url,
-          public_id:  r.public_id,
-          width:      r.width,
-          height:     r.height,
-          created_at: r.created_at
-        })) || [],
-        next_cursor: result.next_cursor || null
-      })
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      body: JSON.stringify(payload)
+    };
+  } catch (err) {
+    // Log for Netlify Function logs
+    console.error('list-photos error:', err);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: err.message, stack: err.stack })
+    };
+  }
+};
+
+
     };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: String(err) }) };
