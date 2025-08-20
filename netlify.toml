@@ -1,7 +1,6 @@
-# netlify.toml  (must be named exactly this)
+# netlify.toml
+
 [build]
-  publish = "."
+  publish   = "."
   functions = "netlify/functions"
 
-# This redirect is optional, but valid. It simply allows
-# / .netlify/functions/<name> to be called directly.
