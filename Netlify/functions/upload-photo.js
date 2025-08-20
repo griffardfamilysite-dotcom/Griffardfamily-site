@@ -1,4 +1,4 @@
-// netlify/functions/upload-photo.js
+// Netlify/functions/upload-photo.js
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
