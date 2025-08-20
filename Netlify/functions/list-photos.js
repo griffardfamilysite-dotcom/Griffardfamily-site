@@ -1,4 +1,4 @@
-// netlify/functions/list-photos.js
+// Netlify/functions/list-photos.js
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
