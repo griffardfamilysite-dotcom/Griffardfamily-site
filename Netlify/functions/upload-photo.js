@@ -1,39 +1,56 @@
+// netlify/functions/upload-photo.js
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
 });
 
-const UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || 'FAMILY_GALLERY';
 const UPLOAD_PASSWORD = process.env.UPLOAD_PASSWORD || 'Family123$';
 
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== 'POST') {
-      return { statusCode: 405, body: 'Method Not Allowed' };
+      return { statusCode: 405, headers: { Allow: 'POST' }, body: 'Method Not Allowed' };
     }
+
     const data = JSON.parse(event.body || '{}');
     const { album, password, file } = data;
 
-    if (password !== UPLOAD_PASSWORD) {
-      return { statusCode: 401, body: 'Unauthorized' };
-    }
     if (!album || !file) {
       return { statusCode: 400, body: 'Missing album or file' };
     }
+    if (password !== UPLOAD_PASSWORD) {
+      return { statusCode: 401, body: 'Unauthorized' };
+    }
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      return { statusCode: 500, body: 'Server not configured' };
+    }
 
+    // Upload into folder FAMILY_GALLERY/<album>
     const folder = `FAMILY_GALLERY/${album}`;
-    const res = await cloudinary.uploader.upload(file, {
+
+    const result = await cloudinary.uploader.upload(file, {
       folder,
-      upload_preset: UPLOAD_PRESET
+      resource_type: 'auto', // accepts images/videos; change to 'image' if you only want images
     });
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: true, result: { secure_url: res.secure_url, public_id: res.public_id } })
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      body: JSON.stringify({
+        ok: true,
+        result: {
+          secure_url: result.secure_url,
+          public_id: result.public_id,
+          folder: result.folder,
+          width: result.width,
+          height: result.height,
+          format: result.format
+        }
+      })
     };
   } catch (err) {
     console.error('upload-photo error:', err);
@@ -44,14 +61,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
-// netlify/functions/upload-photo.js
-import { v2 as cloudinary } from 'cloudinary';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-
