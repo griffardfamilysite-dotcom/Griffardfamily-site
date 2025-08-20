@@ -388,7 +388,7 @@
       const r = await fetch(ANNOUNCE_CSV, {cache:'no-store'}); if(!r.ok) throw 0;
       const rows = parseCSV(await r.text()); const hdr = rows.shift().map(h=>h.trim().toLowerCase());
       const get = name => hdr.indexOf(name);
-      const iTitle = get('title'), iText=get('body')>=0?get('details'):get('text'), iDate=get('date'), iPin=get('pin'), iExp=get('expires on'), iPhoto=get('photo upload');
+      const iTitle = get('title'), iText=get('body')>=0?get('body'):get('body'), iDate=get('date'), iPin=get('pin'), iExp=get('expires on'), iPhoto=get('photo upload');
       const data = rows.map(r=>({
         title:r[iTitle], text:r[iText], date:r[iDate],
         pin:(r[iPin]||'').toString().trim().toLowerCase().startsWith('y') || ['1','true','yes','y'].includes((r[iPin]||'').toString().trim().toLowerCase()),
