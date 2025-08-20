@@ -5,8 +5,3 @@
 
 # This redirect is optional, but valid. It simply allows
 # / .netlify/functions/<name> to be called directly.
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to   = "/.netlify/functions/:splat"
-  status = 200
-  force = true
