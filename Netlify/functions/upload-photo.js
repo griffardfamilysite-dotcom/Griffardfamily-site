@@ -18,7 +18,10 @@ exports.handler = async (event) => {
     const data = JSON.parse(event.body || '{}');
     const { album, password, file } = data;
 
-    if (password !== UPLOAD_PASSWORD) {
+// Add this log
+console.log("UPLOAD DEBUG: album =", album);
+
+}    if (password !== UPLOAD_PASSWORD) {
       return { statusCode: 401, body: 'Unauthorized' };
     }
     if (!album || !file) {
