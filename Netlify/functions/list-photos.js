@@ -1,4 +1,4 @@
-// netlify/functions/list-photos.js
+// Netlify/functions/list-photos.js
 // Lists Cloudinary images for a given album (folder) with pagination.
 // Expected query params:
 //   album=<slug>         (required)  e.g., 2025-reunion
