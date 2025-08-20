@@ -1,3 +1,50 @@
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || 'FAMILY_GALLERY';
+const UPLOAD_PASSWORD = process.env.UPLOAD_PASSWORD || 'Family123$';
+
+exports.handler = async (event) => {
+  try {
+    if (event.httpMethod !== 'POST') {
+      return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+    const data = JSON.parse(event.body || '{}');
+    const { album, password, file } = data;
+
+    if (password !== UPLOAD_PASSWORD) {
+      return { statusCode: 401, body: 'Unauthorized' };
+    }
+    if (!album || !file) {
+      return { statusCode: 400, body: 'Missing album or file' };
+    }
+
+    const folder = `FAMILY_GALLERY/${album}`;
+    const res = await cloudinary.uploader.upload(file, {
+      folder,
+      upload_preset: UPLOAD_PRESET
+    });
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true, result: { secure_url: res.secure_url, public_id: res.public_id } })
+    };
+  } catch (err) {
+    console.error('upload-photo error:', err);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: err.message, stack: err.stack })
+    };
+  }
+};
+
 // netlify/functions/upload-photo.js
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -7,42 +54,4 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const OK_PASSWORD = process.env.UPLOAD_PASSWORD || 'Family123$';
-
-export default async (event) => {
-  try {
-    if (event.httpMethod !== 'POST') {
-      return { statusCode: 405, body: 'Method not allowed' };
-    }
-
-    const contentType = event.headers['content-type'] || '';
-    if (!contentType.includes('application/json')) {
-      return { statusCode: 400, body: 'Expected JSON body' };
-    }
-
-    const { album, file, password } = JSON.parse(event.body || '{}');
-    if (!album || !file) return { statusCode: 400, body: 'album and file are required' };
-    if (password !== OK_PASSWORD) return { statusCode: 401, body: 'Invalid password' };
-
-    const root   = process.env.CLOUDINARY_FOLDER_ROOT || 'FAMILY_GALLERY';
-    const folder = `${root}/${album.trim()}`;
-
-    // file can be a data: URL (base64) or a remote URL
-    const result = await cloudinary.uploader.upload(file, {
-      folder,
-      overwrite: false,
-      resource_type: 'image',
-    });
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        secure_url: result.secure_url,
-        public_id:  result.public_id
-      })
-    };
-  } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: String(err) }) };
-  }
-};
 
